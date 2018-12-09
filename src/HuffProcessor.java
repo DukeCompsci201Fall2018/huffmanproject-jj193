@@ -122,14 +122,14 @@ public class HuffProcessor {
 		writeHeader(root.myRight, out);
 	}
 	
-	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
+	private void writeCompressedBits(String[] codes, BitInputStream in, BitOutputStream out) {
 		while (true) {
 			int bits = in.readBits(BITS_PER_WORD);
 			if (bits == -1) break;
-			String code = codings[bits];
+			String code = codes[bits];
 				out.writeBits(code.length(), Integer.parseInt(code,2));
 		}
-		String code = codings[PSEUDO_EOF];
+		String code = codes[PSEUDO_EOF];
 		out.writeBits(code.length(), Integer.parseInt(code,2));
 	}
 //	public void compress(BitInputStream in, BitOutputStream out) {
