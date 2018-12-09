@@ -67,43 +67,88 @@ public class HuffProcessor {
 			pq.add(new HuffNode(0, right.myWeight + left.myWeight, left, right));
 		}
 		HuffNode myHead = pq.remove();
-
-		Codes = new String[ALPH_SIZE + 1];
-		extractCodes(myHead, "");
-
-		out.writeBits(BITS_PER_INT, HUFF_NUMBER);
+		
+		
+		//next step
+		String[] codings = makeFromTree(myHead);
+		
+		out.writeBits(BITS_PER_INT, HUFF_TREE);
 		writeHeader(myHead, out);
-
-		b = in.readBits(BITS_PER_WORD);
-		while (b != -1) {
-			String myCode = Codes[b];
-			out.writeBits(myCode.length(), Integer.parseInt(myCode, 2));
-			b = in.readBits(BITS_PER_WORD);
-		}
-
-		String endFile = Codes[PSEUDO_EOF];
-		out.writeBits(endFile.length(), Integer.parseInt(endFile, 2));	
+		
+		in.reset();
+		writeCompressedBits(codings, in, out);
+		out.close();
 	}
 	
-	private void extractCodes(HuffNode current, String path) {
-		if ((current.myLeft == null) && (current.myRight == null)) {
-			Codes[current.myValue] = path;
-			return;
-		}
-		extractCodes(current.myLeft, path + 0);
-		extractCodes(current.myLeft, path + 1);
-	}
+	private String[] makeFromTree(HuffNode root) {
+		String[] encodings = new String[ALPH_SIZE + 1];
+	    codingHelper(root,"",encodings);
+	    return encodings;
+	    
 
-	private void writeHeader(HuffNode current, BitOutputStream out) {
-		if ((current.myLeft == null) && (current.myRight == null)) {
-			out.writeBits(1, 1);
-			out.writeBits(9, current.myValue);
-		} else {
-			out.writeBits(1, 0);
-			writeHeader(current.myLeft, out);
-			writeHeader(current.myRight, out);
-		}
 	}
+	
+	private void codingHelper(HuffNode root, String path, String[] encodings) {
+		if (root == null) return;
+		if (root.myLeft ==null && root.myRight==null) {
+			encodings[root.myValue]= path; 
+			return; 
+		}
+		
+		codingHelper(root.myLeft,path + "0", encodings); 
+		codingHelper(root.myRight,path + "1", encodings);
+
+	}
+	
+	private void writeHeader(HuffNode root, BitOutputStream out) {
+		 
+		if(root.myLeft == null && root.myRight == null) { // if leafnode then 
+			
+			out.writeBits(1, 1); // single bit of one
+			out.writeBits(BITS_PER_WORD + 1, root.myValue); // write nine bits
+			
+			return;
+			
+		}
+		
+		out.writeBits(1, 0); // single bit of zero
+		writeHeader(root.myLeft, out);
+		writeHeader(root.myRight, out);
+		
+	}
+	
+	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
+		while (true) {
+			int bits = in.readBits(BITS_PER_WORD);
+			if (bits == -1) break;
+			String code = codings[bits];
+				out.writeBits(code.length(), Integer.parseInt(code,2));
+
+		}
+		String code = codings[PSEUDO_EOF];
+		out.writeBits(code.length(), Integer.parseInt(code,2));
+
+	}
+	
+//	private void extractCodes(HuffNode current, String path) {
+//		if ((current.myLeft == null) && (current.myRight == null)) {
+//			Codes[current.myValue] = path;
+//			return;
+//		}
+//		extractCodes(current.myLeft, path + 0);
+//		extractCodes(current.myLeft, path + 1);
+//	}
+//
+//	private void writeHeader(HuffNode current, BitOutputStream out) {
+//		if ((current.myLeft == null) && (current.myRight == null)) {
+//			out.writeBits(1, 1);
+//			out.writeBits(9, current.myValue);
+//		} else {
+//			out.writeBits(1, 0);
+//			writeHeader(current.myLeft, out);
+//			writeHeader(current.myRight, out);
+//		}
+//	}
 
 	
 	/**
