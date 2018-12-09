@@ -33,7 +33,7 @@ public class HuffProcessor {
 		myDebugLevel = debug;
 	}
 	private String[] charCodes;
-	private int j;
+	private int bits;
 	private int[] charCount;
 	/**
 	 * Compresses a file. Process must be reversible and loss-less.
@@ -45,10 +45,10 @@ public class HuffProcessor {
 	 */
 	public void compress(BitInputStream in, BitOutputStream out) {
 		charCount = new int[ALPH_SIZE];
-		j = in.readBits(BITS_PER_WORD);
-		while (j != -1) {
-			charCount[j] = charCount[j] + 1;
-			j = in.readBits(BITS_PER_WORD);
+		bits = in.readBits(BITS_PER_WORD);
+		while (bits != -1) {
+			charCount[bits] = charCount[bits] + 1;
+			bits = in.readBits(BITS_PER_WORD);
 		}
 		in.reset();
 
@@ -73,11 +73,11 @@ public class HuffProcessor {
 		out.writeBits(BITS_PER_INT, HUFF_NUMBER);
 		writeHeader(myHead, out);
 
-		j = in.readBits(BITS_PER_WORD);
-		while (j != -1) {
-			String myCode = charCodes[j];
+		bits = in.readBits(BITS_PER_WORD);
+		while (bits != -1) {
+			String myCode = charCodes[bits];
 			out.writeBits(myCode.length(), Integer.parseInt(myCode, 2));
-			j = in.readBits(BITS_PER_WORD);
+			bits = in.readBits(BITS_PER_WORD);
 		}
 
 		// Write pseudo-EOF
