@@ -45,27 +45,28 @@ public class HuffProcessor {
 	 */
 	public void compress(BitInputStream in, BitOutputStream out) {
 		Count = new int[ALPH_SIZE]; //readForCounts helpercode
-		b = in.readBits(BITS_PER_WORD);
-		while (b != -1) {
+		Count[PSEUDO_EOF] = 1;
+		while (true) {
+			int bits = in.readBits(BITS_PER_WORD);
+			if (bits == -1) break;
 			Count[b] = Count[b] + 1;
-			b = in.readBits(BITS_PER_WORD);
 		}
-		in.reset();
+		//in.reset();
 
 		PriorityQueue<HuffNode> pq = new PriorityQueue<HuffNode>(); //makeTreefromCounts code
 		for (int k = 0; k < ALPH_SIZE; k++) {
 			if (Count[k] != 0) {
-				pq.add(new HuffNode(k, Count[k]));
+				pq.add(new HuffNode(k, Count[k], null, null));
 			}
 		}
-		pq.add(new HuffNode(PSEUDO_EOF, 0));
+		//pq.add(new HuffNode(PSEUDO_EOF, 0));
 
 		while (pq.size() > 1) {
-			HuffNode left = pq.poll();
-			HuffNode right = pq.poll();
-			pq.add(new HuffNode(-1, right.myWeight + left.myWeight, left, right));
+			HuffNode left = pq.remove();
+			HuffNode right = pq.remove();
+			pq.add(new HuffNode(0, right.myWeight + left.myWeight, left, right));
 		}
-		HuffNode myHead = pq.poll();
+		HuffNode myHead = pq.remove();
 
 		Codes = new String[ALPH_SIZE + 1];
 		extractCodes(myHead, "");
