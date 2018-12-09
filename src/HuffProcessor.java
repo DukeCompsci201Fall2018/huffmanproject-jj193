@@ -44,7 +44,7 @@ public class HuffProcessor {
 	 *            Buffered bit stream writing to the output file.
 	 */
 	public void compress(BitInputStream in, BitOutputStream out) {
-		Count = new int[ALPH_SIZE];
+		Count = new int[ALPH_SIZE]; //readForCounts helpercode
 		b = in.readBits(BITS_PER_WORD);
 		while (b != -1) {
 			Count[b] = Count[b] + 1;
@@ -52,7 +52,7 @@ public class HuffProcessor {
 		}
 		in.reset();
 
-		PriorityQueue<HuffNode> pq = new PriorityQueue<HuffNode>();
+		PriorityQueue<HuffNode> pq = new PriorityQueue<HuffNode>(); //makeTreefromCounts code
 		for (int k = 0; k < ALPH_SIZE; k++) {
 			if (Count[k] != 0) {
 				pq.add(new HuffNode(k, Count[k]));
@@ -166,6 +166,5 @@ public class HuffProcessor {
 		}
 		in.close();
 		out.close();
-		
 	}
 }
